@@ -1,0 +1,32 @@
+[
+  {
+    "name": "Charles",
+    "dorsal": 11,
+    "position": "Base",
+    "description": "Charles, base del equipo Solfachuzas",
+    "stats": { "PPG": 2, "APG": 5, "RPG": 1 },
+    "image": "https://bafybeihfzmddwr6hrtgliga5d2ix4upb3vptw62vbjcmevqwrlafljojnu.ipfs.dweb.link/charles.jpg",
+    "imagePath": "",
+    "recipient": ""
+  },
+  {
+    "name": "Mono",
+    "dorsal": 5,
+    "position": "Pivot",
+    "description": "Mono, pivot del equipo Solfachuzas",
+    "stats": { "PPG": 12, "APG": 3, "RPG": 9 },
+    "image": "https://bafybeihfzmddwr6hrtgliga5d2ix4upb3vptw62vbjcmevqwrlafljojnu.ipfs.dweb.link/mono.jpg",
+    "imagePath": "",
+    "recipient": ""
+  },
+  {
+    "name": "Buke",
+    "dorsal": 17,
+    "position": "Ala-Pivot",
+    "description": "Buke, ala-pivot del equipo Solfachuzas",
+    "stats": { "PPG": 0.42, "APG": 0, "RPG": 3 },
+    "image": "https://bafybeihfzmddwr6hrtgliga5d2ix4upb3vptw62vbjcmevqwrlafljojnu.ipfs.dweb.link/buke.jpg",
+    "imagePath": "",
+    "recipient": ""
+  }
+]
