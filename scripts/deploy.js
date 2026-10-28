@@ -27,7 +27,7 @@ async function main() {
     for (const p of players) {
       const recipient = p.recipient && p.recipient.length > 0 ? p.recipient : await signer0.getAddress();
       recipients.push(recipient);
-      // use metadataURI (ipfs://CID)
+      // metadataURI is ipfs://<CID of the metadata JSON>
       uris.push(p.metadataURI || (`ipfs://${p.metadataCID}`));
     }
 
@@ -37,11 +37,8 @@ async function main() {
     await tx.wait();
     console.log('Batch mint completed');
   } else {
-    console.log('players-with-cids.json not found — falling back to single mint example');
-    // mint one to yourself!
-    // update the IPFS CID to be your metadata CID if you want
-    await nft.safeMint(await signer0.getAddress(), "ipfs://QmbCwoJB7g9b86BfEahsjzyzzNx3WEu7Jc1opXWgeTXFgb");
-    console.log("NFT Minted!");
+    console.log('ipfs/players-with-cids.json not found — contract deployed, nothing minted.');
+    console.log('Run "node ipfs/images/upload.js" to generate it, then "CONTRACT_ADDRESS=<address> npx hardhat run scripts/batchMint.js --network <network>".');
   }
 }
 

@@ -1,68 +1,60 @@
-# MintNFT - Solfachuzas Players (adaptación del ejercicio)
+# Solfachuzas NFTs
 
-Este repositorio contiene una adaptación del ejercicio "MintNFT" para crear NFTs para los jugadores del equipo "Solfachuzas".
+Estado: en progreso (probado en red local de Hardhat; no desplegado)
 
-Objetivo
- - Implementar un contrato ERC-721 (basado en OpenZeppelin) para acuñar NFTs de jugadores.
- - Generar metadata en formato ERC-721 (JSON) y subirla a IPFS.
- - Automatizar el proceso de subida (IPFS) y acuñado (Hardhat) con scripts.
+NFTs (ERC-721) para los jugadores del equipo de baloncesto **Solfachuzas**: un NFT por jugador, con su dorsal, posición y estadísticas como atributos. Forma parte del ecosistema de [SolfaCoin](https://github.com/charles030992/SolfaCoin) (el token del equipo) y está adaptado del ejercicio *MintNFT* de Alchemy University.
 
-Estado actual
- - Contrato modificado: `contracts/MyToken.sol`
-   - Nombre / símbolo: `Solfachuzas Player` / `SLF`.
-   - `safeMint(address,string)` y `batchMint(address[], string[])` (solo `owner`).
-   - Transferibilidad bloqueada por defecto (`transferable = false`) y función `setTransferable(bool)` para habilitarla.
- - Scripts añadidos / modificados:
-   - `ipfs/images/upload.js` — sube metadatos (y opcionalmente imágenes) a la API local de IPFS. Si la API local falla, el script acepta URLs públicas en `players.json`.
-   - `ipfs/players.json` — entrada de ejemplo con los 3 jugadores (Charles, Mono, Buke).
-   - `ipfs/players-with-cids.json` — archivo generado (en este repositorio se incluyó un fallback con URLs públicas) para permitir hacer `batchMint` mientras se depura la API de IPFS.
-   - `scripts/deploy.js` — despliega el contrato y, si existe `ipfs/players-with-cids.json`, realiza `batchMint` con las URIs encontradas.
-   - `scripts/batchMint.js` — helper para enviar `batchMint` a un contrato ya desplegado.
+## El contrato (`contracts/MyToken.sol`)
 
-Requisitos (local)
- - Node.js (recomendada v16 o v18). El repo funciona con Node 22 pero Hardhat mostrará una advertencia.
- - npm
- - IPFS Desktop (opcional, para subir imágenes y metadatos localmente)
+Basado en OpenZeppelin 4 (`ERC721`, `ERC721URIStorage`, `Ownable`). Nombre `Solfachuzas Player`, símbolo `SLF`.
 
-Instalación y pruebas locales
-1. Instalar dependencias
-```powershell
+- `safeMint(to, uri)` y `batchMint(recipients, uris)` — solo el *owner* (el que despliega).
+- **No transferible por defecto** (`transferable = false`): un jugador no puede vender ni pasar su NFT. El *owner* puede activarlo con `setTransferable(true)`.
+- Mientras está bloqueado, el *owner* sí puede repartir los NFT que él mismo tiene (por ejemplo, acuñar a su cuenta y luego pasarlos a cada jugador). No puede mover el NFT de un jugador sin su aprobación.
+
+## Puesta en marcha
+
+Requisitos: Node.js (recomendado 18; con versiones más nuevas Hardhat 2 avisa de que no las soporta oficialmente, pero funciona) y npm.
+
+```bash
 npm install
+npm test             # 12 tests del contrato, sin necesidad de .env
+npm run compile
 ```
 
-2. (Opcional) Iniciar un nodo Hardhat persistente para pruebas locales
-```powershell
-npx hardhat node
-```
+## Del equipo a los NFT
 
-3. Subir imágenes / metadatos a IPFS
-- Guardar imágenes en `ipfs/images/` con los nombres indicados en `ipfs/players.json` (ej. `charles.jpg`).
-- Asegurarse de que IPFS Desktop esté ejecutándose y que la API aparezca en `/ip4/127.0.0.1/tcp/5001`.
-- Ejecutar (desde la raíz del repo):
-```powershell
-node ipfs/images/upload.js
-```
-- Resultado esperado: se crea `ipfs/players-with-cids.json` con `metadataCID` y `metadataURI` (ipfs://...).
+1. **Datos de los jugadores** — edita `ipfs/images/players.json` (nombre, dorsal, posición, estadísticas, URL de la imagen y, opcionalmente, la dirección `recipient` de cada jugador). Las imágenes viven en `ipfs/images/`.
+2. **Subir los metadatos a IPFS** — con [IPFS Desktop](https://docs.ipfs.tech/install/ipfs-desktop/) en marcha (API local en `127.0.0.1:5001`):
 
-Si la API local de IPFS da problemas (403 / Forbidden), el script puede usar las URLs públicas ya subidas a un gateway (este repositorio incluye un `players-with-cids.json` de fallback que apunta a tus imágenes públicas). Esto permite continuar con el despliegue aunque los metadatos no estén fijados como archivos JSON en IPFS.
+   ```bash
+   npm run upload:ipfs
+   ```
 
-4. Desplegar y acuñar (local)
-- Para desplegar usando la red local (persistente) que arrancaste en paso 2:
-```powershell
-npx hardhat run scripts/deploy.js --network localhost
-```
-- Alternativamente el script también se ejecuta en la red efímera por defecto:
-```powershell
-npx hardhat run scripts/deploy.js
-```
+   Genera un JSON ERC-721 por jugador (`name`, `description`, `image`, `attributes`), lo sube a IPFS y escribe `ipfs/players-with-cids.json`. Ese fichero es generado y no se versiona.
+3. **Desplegar y acuñar** — en la red local de Hardhat:
 
-5. Si ya despletaste en una instancia y solo quieres ejecutar el batchMint en un contrato existente, usa:
-```powershell
-npx hardhat run scripts/batchMint.js <CONTRACT_ADDRESS> --network localhost
-```
+   ```bash
+   npx hardhat run scripts/deploy.js
+   ```
 
-Notas importantes / debugging IPFS
-- Si `Invoke-RestMethod -Method Post -Uri http://127.0.0.1:5001/api/v0/version` te devuelve `403 Forbidden`, prueba a reiniciar IPFS Desktop (Stop → Start). El endpoint de la API local acepta POST y devuelve JSON con la versión.
-- Si el daemon local no responde, como alternativa puedes usar un servicio de pinning (Pinata, web3.storage). Puedo añadir soporte para web3.storage si quieres automatizar con una API key.
+   Despliega el contrato y, si existe `ipfs/players-with-cids.json`, acuña un NFT por jugador. Si un jugador no tiene `recipient`, su NFT se acuña a la cuenta que despliega. Para acuñar en un contrato ya desplegado (por ejemplo en un nodo local con `npx hardhat node`), pasa su dirección en la variable `CONTRACT_ADDRESS`:
 
-# Mint NFT 
+   ```bash
+   CONTRACT_ADDRESS=0x... npx hardhat run scripts/batchMint.js --network localhost
+   # PowerShell: $env:CONTRACT_ADDRESS="0x..."; npx hardhat run scripts/batchMint.js --network localhost
+   ```
+
+### Desplegar en Sepolia
+
+Copia `.env.example` a `.env` y rellena `SEPOLIA_URL` y `PRIVATE_KEY` (**una cuenta solo de pruebas**). La red `sepolia` solo se activa si ambas variables existen. Después añade `--network sepolia` a los comandos anteriores.
+
+## Importante antes de acuñar
+
+El `tokenURI` de cada NFT debe apuntar al **JSON de metadatos**, no a la imagen. Genéralo siempre con `npm run upload:ipfs`: si acuñas con un `players-with-cids.json` cuyos `metadataURI` terminan en `.jpg`, los marketplaces mostrarían solo una foto, sin nombre ni atributos.
+
+## Limitaciones
+
+- Sin auditar y sin probar en un marketplace: úsalo solo en testnet.
+- Subir los metadatos exige tener un nodo IPFS local; no hay todavía integración con un servicio de *pinning* (Pinata, web3.storage).
+- Las fotos de `ipfs/images/` son de los jugadores del equipo.

@@ -2,9 +2,10 @@ const fs = require('fs');
 const path = require('path');
 
 async function main() {
-  const contractAddress = process.argv[2] || process.env.CONTRACT_ADDRESS;
+  // `hardhat run` does not forward extra arguments, so the address comes from the environment.
+  const contractAddress = process.env.CONTRACT_ADDRESS;
   if (!contractAddress) {
-    console.error('Usage: node scripts/batchMint.js <CONTRACT_ADDRESS>  OR set CONTRACT_ADDRESS env var');
+    console.error('Usage: CONTRACT_ADDRESS=0x... npx hardhat run scripts/batchMint.js --network <network>');
     process.exit(1);
   }
 
